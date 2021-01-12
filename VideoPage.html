@@ -1,0 +1,486 @@
+
+<!--Page where the video is showed, the table of questions and the table of answers of the choosen question-->
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.css">
+    <script  src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.js">  </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-xmlrpc/0.4.3/jquery.xmlrpc.js"> </script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <link href="https://vjs.zencdn.net/7.8.4/video-js.css" rel="stylesheet" />
+    <script src="http://vjs.zencdn.net/7.8.4/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/2.6.1/Youtube.min.js"></script>
+
+    <style>
+      /*Css code*/
+      /* Control the left side */
+      ytvideo {
+        float: left;
+        width: 50%;
+        height: 700px;
+        float: left;
+        padding: 20px;
+        background-color: rgb(150, 214, 214);
+      }
+      /* Control the right side */
+      question {
+        float: left;
+        width: 50%;
+        height: 700px;
+        background-color:  rgb(150, 214, 214);
+      }
+      /* Style the footer */
+      footer {
+        background-color: rgb(150, 214, 214);
+        padding: 20px;
+        /*text-align: center;*/
+        color: rgb(22, 24, 24)
+      }
+
+      section:after {
+      content: "";
+      display: table;
+      clear: both;
+     }
+
+      /* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+      @media (max-width: 500px) {
+        left, right {
+          width: 100%;
+          height: auto;
+        }
+      }
+
+      #element1 {float:left;clear: left;}
+      #element2 {padding-left: 20px; float: left;}
+      </style>
+    
+    <script>
+      //function to verify if a text was inserted in the section to add a new question or to add a new answer, 
+      //if a text was not inserted , it will give an alert
+      function verifyText(x){
+        if(x == null || x == ""){
+          alert("You must enter a text!");
+          return false;
+        }
+        else
+            return true;
+        }
+      
+      //function to convert the time of the video, from seconds to minutes
+      function convertTime(pauseTime){
+        var minutes = Math.floor(pauseTime / 60);
+        var seconds = Math.floor(pauseTime - minutes * 60);
+
+        nseconds = seconds.toString();
+        if (nseconds.length == 1)
+          timeMin = minutes + ":" + 0 + seconds
+        else 
+          timeMin = minutes + ":" + seconds
+        
+        return timeMin;
+      }
+
+      //global variable of the id of the question
+      var q_id = 0
+      //function to update the table of the question , it will get the information through the REST API , 
+      //using the endpoint '/API/videos/'+id+'/questions/'
+      function updateQuestionstable(){
+          id = "{{id}}"
+            $.ajax({
+                url: '/API/videos/'+id+'/questions/',
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    $('#questionsTable > tbody:last-child').empty()
+                    data["questions"].forEach(v => {
+                        console.log(v["time"]+" "+v["id"]+" "+v["text"])
+                        $('#questionsTable > tbody:last-child').
+                            append('<tr> <td>'+ v["time"]+'</td><td>'+v["id"]+' </td><td>' +v["text"] + '</td></tr>');
+                    });
+                }
+            });
+        }
+      //function to add a question , it will post the information through the REST API , 
+      //using the endpoint '/API/videos/'+id+'/questions/' 
+      function addNewQuestion(text, pauseTime){
+        id = "{{id}}"
+        requestData={'id':id, 'text':text, 'time':pauseTime }
+        $.ajax({
+            url: '/API/videos/'+ id +'/questions/',
+            type: "POST",
+            dataType: "json",
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(data){
+              console.log("response for question creation "+ data)
+              updateQuestionstable()
+            }
+        });
+      }
+
+  
+      //function to update table of answers , it will get the information through the REST API ,
+      //using the endpoint '/API/videos/'+ id + '/' + q_id +'/answers/'
+      function UpdateAnswersTable(){
+          id = "{{id}}"
+          requestData={'id':id}
+          console.log(id)
+          $.ajax({
+              url: '/API/videos/'+ id + '/' + q_id +'/answers/',
+              type: "GET",
+              dataType: "json",
+              success: function (data) {
+                  console.log(data);
+                  $('#answersTable > tbody:last-child').empty()
+                  data["answers"].forEach(v => {
+                      $.ajax({
+                          url: '/API/users/'+v["user"]+'/',
+                          type: "GET",
+                          dataType: "json",
+                          success: function (userdata) {
+                              console.log(userdata);
+                              console.log(v["user"]+" "+userdata["name"]+" "+v["text"])
+                                $('#answersTable > tbody:last-child').
+                                    append('<tr> <td>'+ v["user"]+'</td><td>' + userdata["name"]+'</td><td>' +v["text"] + '</td></tr>');
+                          }
+                      });
+                  });
+              }
+          });
+         
+      }
+
+      //function to add an answer , it will post the information through the REST API , 
+      //using the endpoint '/API/videos/'+ id + '/' + q_id +'/answers/'
+      function addNewAnswer(answer){
+          id = "{{id}}"
+          console.log(id)
+          question = document.getElementById("questionID").innerText
+          requestData={'answer':answer}
+          $.ajax({
+            url: '/API/videos/'+ id + '/' + q_id +'/answers/',
+            type: "POST",
+            dataType: "json",
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(data){
+              console.log("response for answer creation "+ data)
+              UpdateAnswersTable()
+            }
+          });   
+      }
+
+      //function to get the selected question in the table, it will get the information through the REST API , 
+      //using the endpoint '/API/videos/'+ id +'/'+ q_id +'/'
+      function updateSelectedQuestion(){
+          
+          $("#AnswerTitle").show() 
+          $("#answersTable").show() 
+          $("#Question").show() 
+          $("#Time").show() 
+          $("#User").show() 
+          $("#Answer").show() 
+          $("#buttonUpdateAnswersTable").show()
+          $("#footersection").show()
+          console.log("AQUI")
+          requestData={'id':id, 'q_id':q_id}
+          
+          console.log(id)
+          console.log(q_id)
+          $.ajax({
+            url: '/API/videos/'+ id +'/'+ q_id +'/',
+            type: "GET",
+            dataType: "json",
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(data){
+              console.log("Entrei aqui")
+              document.getElementById("questionID").innerHTML =  data["Question"].text
+              document.getElementById("timeID").innerHTML =  data["Question"].time
+              document.getElementById("usernameID").innerHTML =  data["Question"].user
+              document.getElementById("nameID").innerHTML =  data["user"].name
+
+              UpdateAnswersTable()
+            }
+
+          });
+
+          $("#buttonAddAnswer").show()
+
+      }
+
+        $(document).ready(function(){
+            url = "{{url}}"
+            //functions related to the video player
+            console.log(url)
+            var vPlayer = videojs('videoPlayer');
+            vPlayer.src({ "type": "video/youtube", "src": url});
+            vPlayer.play()
+           
+            updateQuestionstable()
+            UpdateAnswersTable()
+
+            $("#AnswerTitle").hide()
+            $("#newAnswerID").hide()
+            $("#buttonAddAnswer").hide()
+            $("#buttonAddAnswer2").hide()
+            $("#Question").hide() 
+            $("#Time").hide()  
+            $("#User").hide()
+            $("#buttonUpdateAnswersTable").hide() 
+            $("#answersTable").hide() 
+            $("#Answer").hide() 
+            $("#footersection").hide() 
+            
+       
+            //function to select a question in the table of questions
+            $('#questionsTable').on('click', 'tr', function() {
+              //get row contents into an array
+              
+              var tableData = $(this).children("td").map(function() {
+                  return $(this).text();
+              }).get();
+              q_id = parseInt(tableData[1])
+              updateSelectedQuestion()
+             
+				    });
+            
+            $("#buttonVideoPause").show();
+            $("#buttonVideoResume").hide();
+            //function to pause the video
+            $("#buttonVideoPause").click(function(){
+                vPlayer.pause()
+                var pauseTime = vPlayer.currentTime()
+                TimeMin = convertTime(pauseTime)
+                $("#resumetime").val(pauseTime)
+                $("#buttonVideoPause").hide();
+                $("#buttonVideoResume").show();
+
+             })
+             //function to resume the video
+            $("#buttonVideoResume").click(function(){
+                var pauseTime = vPlayer.currentTime()
+                $("#resumetime").val(pauseTime)
+                vPlayer.currentTime( parseFloat(pauseTime))
+                vPlayer.play()
+                $("#buttonVideoPause").show();
+                $("#buttonVideoResume").hide();
+            })
+            //function to play the video,  it will get the information through the REST API , 
+            //using the endpoint '/API/videos/'+videoID+'/'
+
+            $("#buttonPlayVideo").click(function(){
+              videoID = $("#playVideoID").val()
+              $.ajax({
+                  url: '/API/videos/'+videoID+'/',
+                  type: "GET",
+                  dataType: "json",
+                  success: function(data){
+                  console.log(data)
+                  url = data['url']
+                  console.log(url)
+                  vPlayer.src({ "type": "video/youtube", "src": url});
+                  vPlayer.play()
+                }
+              });
+
+            })
+            $("#newQuestionID").hide()
+            $("#buttonAddQuestion2").hide()
+
+            //function of the button to add new question
+            $("#buttonAddQuestion").click(function(){
+              vPlayer.pause()
+              var pauseTime = vPlayer.currentTime()
+              TimeMin = convertTime(pauseTime) 
+              $("#resumetime").val(pauseTime)
+              $("#buttonVideoPause").hide();
+              $("#buttonVideoResume").hide();
+              $("#newQuestionID").show()
+              $("#buttonAddQuestion").hide()
+              $("#buttonAddQuestion2").show()
+            })
+            //function of the button to add  the question , after entering a text
+            $("#buttonAddQuestion2").click(function(){
+              newQuestion = $("#newQuestionID").val()
+              if(verifyText(newQuestion)==true){
+                var pauseTime = vPlayer.currentTime()
+                TimeMin = convertTime(pauseTime)
+                addNewQuestion(newQuestion, TimeMin )
+                updateQuestionstable()
+                vPlayer.currentTime( parseFloat(pauseTime))
+                vPlayer.play()
+                $("#buttonVideoPause").show();
+                $("#buttonVideoResume").hide();
+                $("#newQuestionID").hide()
+                $("#buttonAddQuestion2").hide()
+                $("#buttonAddQuestion").show()
+              }
+
+            })
+            //button of the function to update the table of questions
+            $("#buttonUpdateQuestiontable").click(
+              function(){
+                updateQuestionstable()
+              }
+            )
+
+            $("#newAnswerID").hide()
+            $("#buttonAddAnswer2").hide()
+            //function of the button to add new answer
+            $("#buttonAddAnswer").click(function () {
+              $("#AnswerTitle").show()
+              $("#newAnswerID").show()
+              $("#buttonAddAnswer").hide()
+              $("#buttonAddAnswer2").show()
+            })
+            //function of the button to the answer, after entering a text
+            $("#buttonAddAnswer2").click(function(){
+              newAnswer = $("#newAnswerID").val()
+              if(verifyText(newAnswer)==true){
+                addNewAnswer(newAnswer)
+                UpdateAnswersTable()
+                $("#newAnswerID").hide()
+                $("#buttonAddAnswer2").hide()
+                $("#buttonAddAnswer").show()
+              }
+              
+            })
+            //button of the function to update the table of answers
+            $("#buttonUpdateAnswersTable").click(
+              function(){
+                UpdateAnswersTable()
+              }
+            )
+            //function of the button to go back to the previous page, VideoListing.html
+            $("#buttonBack").click(function(){
+              window.location.href ='/API/videolist/' ;
+            })
+
+        });
+      
+
+</script>
+  </head>
+  <body>
+    <section>
+      <ytvideo>
+        <h3>{{title}}</h3>
+        <br> 
+        <video  id="videoPlayer" controls 
+            class="video-js vjs-default-skin"
+            width="640"
+            data-setup='{ "autoplay": true, "preload": "auto", "techOrder": ["youtube"], "sources": [{ "type": "video/youtube" }'
+            >
+        </video>
+        <h3>Control Video</h3>
+      <!-- <div class="ui input focus" > 
+          <input type="text" id="resumetime" >
+        </div> -->
+        
+        <button class="ui button" id="buttonVideoPause" id = "resumetime" >
+          PAUSE Video
+        </button> 
+        <button class="ui button" id="buttonVideoResume"  id="resumetime" >
+          RESUME Video
+        </button>
+        <h3>Add a new Question</h3>
+        <div class="ui input">
+          <input type="text" placeholder="Question" id="newQuestionID">
+        </div>
+        <button class="ui button" id="buttonAddQuestion">
+         New Question
+        </button> 
+        <button class="ui button" id="buttonAddQuestion2">
+          Add new Question
+        </button> 
+
+        
+      </ytvideo>
+
+      <question>
+
+        <h3>Questions</h3>
+        <div style="height:500px;overflow:auto;">
+        <table class="ui celled table selectable" id="questionsTable" >
+          <thead>
+            <tr>
+              <th>Time</th>  <th>ID</th> <th>Question</th>   
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+        <button class="ui button" id="buttonUpdateQuestiontable">
+          Update List
+        </button>
+        <br>
+        <br>
+        <button class="ui button" id="buttonBack">
+          Go Back
+        </button>
+      </question>
+    </section>
+
+    <footer id = "footersection">
+      <div id="element1">
+        <h3 id = "Question">Questions</h3>
+      </div>
+      <div id="element2">
+         <p id = "questionID"></p>
+      </div>
+      <br>
+      <div id="element1">
+        <h3 id = "Time">Time</h3> 
+      </div>
+      <div id="element2">
+        <p id = "timeID"></p>
+      </div>
+      <br>
+      <div id="element1"> 
+        <h3 id = "User">User: </h3>
+      </div>
+      <div id="element2"> 
+       <p id = "usernameID" ></p>
+      </div>
+      <div id="element2">
+        <p id = "nameID"></p>
+      </div>
+     
+       <br>
+       <h3 id="AnswerTitle"> Add a new Answer</h3>
+       <div class="ui input">
+         <input type="text" placeholder="Answer" id="newAnswerID">
+       </div>
+       <button class="ui button" id="buttonAddAnswer">
+         New Answer
+       </button> 
+       <button class="ui button" id="buttonAddAnswer2">
+        Add new Answer
+      </button> 
+       <h3 id = "Answer">Answers</h3>
+       <div style="height:500px;overflow:auto;">
+        <table class="ui celled table selectable" id="answersTable" >
+          <thead>
+            <tr>
+              <th>User</th>  <th>Name</th>  <th>Answer</th>  
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+        <button class="ui button" id="buttonUpdateAnswersTable">
+          Update Answers
+        </button>
+    </footer> 
+    
+  </body>
+
+</html>

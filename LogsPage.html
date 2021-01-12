@@ -1,0 +1,117 @@
+<!--Page were log activities are listed, there are two tables displayed, the first one is where the message exchange events are showed,
+and the second one is where the data creation is showed. There is a go back button that returns to the Admin.html-->
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.css">
+    <script  src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.js">  </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-xmlrpc/0.4.3/jquery.xmlrpc.js"> </script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+     
+    </style>
+    <script>
+       //function to update the table of the messages , it will get the information through the REST API , using the endpoint '/API/messages/'
+        function updateMessagesTable(){
+          $.ajax({
+              url: '/API/messages/',
+              type: "GET",
+              dataType: "json",
+              success: function (data) {
+                console.log(data);
+                $('#messagesTable > tbody:last-child').empty()
+                data["messages"].forEach(v => {
+                  console.log(v["timeStamp"]+" "+v["timeStamp"]+" "+v["endpoint"])
+                  $('#messagesTable > tbody:last-child').
+                    append('<tr> <td>'+ v["timeStamp"]+'</td><td>' + v["IP"]+'</td><td>' +v["endpoint"] +'</td></tr>');
+                });
+              }
+          });
+        }
+         //function to update the table of the data creation , it will get the information through the REST API , using the endpoint '/API/datacreation/'
+        function updateDataTable(){
+          $.ajax({
+              url: '/API/datacreation/',
+              type: "GET",
+              dataType: "json",
+              success: function (data) {
+                console.log(data);
+                $('#DataTable > tbody:last-child').empty()
+                data["data"].forEach(v => {
+                  console.log(v["data_type"]+" "+v["content"] +" "+v["timeStamp"]+" "+v["user"])
+                  $('#DataTable > tbody:last-child').
+                    append('<tr> <td>'+ v["data_type"]+'</td><td>' +v["content"] +'</td><td>'+v["timeStamp"] +'</td><td>'+v["user"]+'</td></tr>');
+                });
+              }
+          });
+        }
+
+        $(document).ready(function(){
+            updateMessagesTable()
+            updateDataTable()
+            //button to update the messages table
+            $("#buttonUpdateMessagesTable").click(
+              function(){
+                updateMessagesTable()
+              }
+            )
+            //button to update the data table
+            $("#buttonUpdateDataTable").click(
+              function(){
+                updateDataTable()
+              }
+            )
+            //button to return to the previous page
+            $("#buttonReturn").click(
+              function(){
+                window.location.href ='/API/admin/' ;
+              }
+            )
+          
+        });
+
+    </script>
+
+  </head>
+  <body style="background-color:rgb(139, 235, 190)">
+    <h3>List of Messages</h3>
+  <div style="height:250px;overflow:auto;">
+    <table class="ui celled table selectable" id="messagesTable" >
+      <thead >
+        <tr>
+          <th>Time </th>  <th>IP</th><th>Endpoint</th>  
+        </tr>
+      </thead>
+      <tbody >
+      </tbody>
+    </table>
+  </div>
+    <br>
+    <button class="ui button" id="buttonUpdateMessageTable">
+      Update List
+    </button>
+
+    <h3>List of Created Data</h3>
+    <div style="height:250px;overflow:auto;">
+      <table class="ui celled table selectable" id="DataTable" >
+        <thead>
+          <tr>
+            <th>Data Type</th>   <th>Content</th>  <th>Time</th> <th>User</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <br>
+      <button class="ui button" id="buttonUpdateDataTable">
+        Update List
+      </button>
+      <button class="ui button" id="buttonReturn">
+        Go back
+      </button>
+  </body>
+ 
+</html>

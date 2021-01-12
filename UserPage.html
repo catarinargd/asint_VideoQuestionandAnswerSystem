@@ -1,0 +1,40 @@
+<!--Page when a user that is only regular tries to access the admin pages, that is a return button to the appPage-->
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.css">
+    <script  src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.js">  </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-xmlrpc/0.4.3/jquery.xmlrpc.js"> </script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+      *{
+        background-color:  rgb(25, 140, 235);
+      }
+     
+    </style>
+    <script>
+        
+        $(document).ready(function(){
+
+            $("#buttonReturn").click(
+              function(){
+                window.location.href = "/app_page/" ;
+              }
+            )
+          
+        });
+
+    </script>
+
+  </head>
+  <body style="background-color:rgb(255, 188, 207)">
+    Acesso Não Autorizado 
+    <br>
+    <button class="ui button" id="buttonReturn">
+      Go back
+    </button>
+  </body>
+ 
+</html>
