@@ -1,0 +1,79 @@
+<!--The appPage is the front page of the webpage, if the user is logged in, it has access to 3 buttons, access to admin pages, access to video pages
+and to logout, of it is not logged In, it will only appear the login button-->
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.css">
+    <script  src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.js">  </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-xmlrpc/0.4.3/jquery.xmlrpc.js"> </script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+      *{
+        background-color:  rgb(247, 181, 105);
+      }
+     
+    </style>
+    <script>
+         $(document).ready(function(){
+          $("#buttonAdmin").click(
+            function(){
+              window.location.href ='/API/admin/';
+            }
+          )
+          $("#buttonVideos").click(
+            function(){
+              window.location.href ='/API/videolist/';
+            }
+          )
+          $("#buttonLogout").click(
+            function(){
+              window.location.href ='/logout' ;
+            }
+          )
+
+          $("#buttonLogIn").click(
+            function(){
+              window.location.href ='/login';
+            }
+          )
+  });
+
+    </script>
+
+  </head>
+  <body style="background-color:rgb(247, 181, 105)">
+    <h3>Video Question and Answers System </h3>
+
+    <title>{% block title %}{% endblock %} - Flask</title>
+    {% if loggedIn %}
+
+    <br>
+    <button class="ui button" id="buttonAdmin">
+      Access admin page
+    </button>
+    <br>
+    <br>
+    <button class="ui button" id="buttonVideos">
+      Access Videos
+    </button>
+    <br>
+    <br>
+    <button class="ui button" id="buttonLogout">
+      Logout
+    </button>
+    
+    
+    {% else %}
+    <button class="ui button" id="buttonLogIn">
+      Login
+    </button>
+    
+    {% endif %}
+
+  </body>
+ 
+</html>
+
+
